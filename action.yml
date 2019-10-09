@@ -1,0 +1,13 @@
+name: 'rust-audit-check'
+description: 'Run cargo audit and check for security advisories'
+author: 'actions-rs team'
+branding:
+  icon: play-circle
+  color: black
+inputs:
+  token:
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
