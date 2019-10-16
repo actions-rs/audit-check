@@ -37,7 +37,7 @@
         "@actions-rs/core": "0.0.5",
         "@actions/core": "^1.1.1",
         "@actions/github": "^1.1.0",
-        "handlebars": "^4.4.2"
+        "handlebars": "^4.4.3"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^2.4.0",
