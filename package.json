@@ -36,7 +36,7 @@
     "dependencies": {
         "@actions-rs/core": "0.0.8",
         "@actions/core": "^1.1.1",
-        "@actions/github": "^1.1.0",
+        "@actions/github": "^2.1.0",
         "handlebars": "^4.5.3"
     },
     "devDependencies": {
