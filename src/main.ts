@@ -67,17 +67,17 @@ export async function run(actionInput: input.Input): Promise<void> {
     const client = new github.GitHub(actionInput.token, {
         userAgent: USER_AGENT,
     });
-    const advisories = report.vulnerabilities.list.concat(report.warnings);
+    const advisories = report.vulnerabilities.list;
     if (github.context.eventName == 'schedule') {
         core.debug(
             'Action was triggered on a schedule event, creating an Issues report',
         );
-        await reporter.reportIssues(client, advisories);
+        await reporter.reportIssues(client, advisories, report.warnings);
     } else {
         core.debug(
             `Action was triggered on a ${github.context.eventName} event, creating a Check report`,
         );
-        await reporter.reportCheck(client, advisories);
+        await reporter.reportCheck(client, advisories, report.warnings);
     }
 }
 

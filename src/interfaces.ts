@@ -1,8 +1,14 @@
+/**
+ * These types should match to what `cargo-audit` outputs in a JSON format.
+ *
+ * See `rustsec` crate for structs used for serialization.
+ */
+
 export interface Report {
     database: DatabaseInfo;
     lockfile: LockfileInfo;
     vulnerabilities: VulnerabilitiesInfo;
-    warnings: Vulnerability[];
+    warnings: Warning[];
 }
 
 export interface DatabaseInfo {
@@ -39,3 +45,25 @@ export interface Package {
     name: string;
     version: string;
 }
+
+export interface Warning {
+    kind: Kind;
+    package: Package;
+}
+
+// TypeScript types system is weird :(
+export interface Kind {
+    unmaintained?: KindUnmaintained;
+    informational?: KindInformational;
+    yanked?: KindYanked;
+}
+
+export interface KindUnmaintained {
+    advisory: Advisory;
+}
+
+export interface KindInformational {
+    advisory: Advisory;
+}
+
+export interface KindYanked {} // eslint-disable-line @typescript-eslint/no-empty-interface

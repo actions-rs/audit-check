@@ -2,6 +2,7 @@ import * as process from 'process';
 
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as nunjucks from 'nunjucks';
 
 import { checks } from '@actions-rs/core';
 import * as interfaces from './interfaces';
@@ -14,21 +15,54 @@ interface Stats {
     other: number;
 }
 
-function dumpVulnerabilities(
-    vulnerabilities: Array<interfaces.Vulnerability>,
-): void {
-    const render = templates.CHECK_TEXT({
-        vulnerabilities: vulnerabilities,
-    });
+nunjucks.configure({
+    trimBlocks: true,
+    lstripBlocks: true,
+});
 
-    core.info(render);
+function makeReport(
+    vulnerabilities: Array<interfaces.Vulnerability>,
+    warnings: Array<interfaces.Warning>,
+): string {
+    const preparedWarnings: Array<templates.ReportWarning> = [];
+    for (const warning of warnings) {
+        // TODO: Is there any better way?
+        if ('unmaintained' in warning.kind) {
+            preparedWarnings.push({
+                advisory: warning.kind.unmaintained!.advisory, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                package: warning.package,
+            });
+        } else if ('informational' in warning.kind) {
+            preparedWarnings.push({
+                advisory: warning.kind.informational!.advisory, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                package: warning.package,
+            });
+        } else if ('yanked' in warning.kind) {
+            preparedWarnings.push({
+                package: warning.package,
+            });
+        } else {
+            core.warning(
+                `Unknown warning kind ${warning.kind} found, please, file a bug`,
+            );
+            continue;
+        }
+    }
+
+    return nunjucks.renderString(templates.REPORT, {
+        vulnerabilities: vulnerabilities,
+        warnings: preparedWarnings,
+    });
 }
 
 export function plural(value: number, suffix = 's'): string {
     return value == 1 ? '' : suffix;
 }
 
-function getStats(vulnerabilities: Array<interfaces.Vulnerability>): Stats {
+function getStats(
+    vulnerabilities: Array<interfaces.Vulnerability>,
+    warnings: Array<interfaces.Warning>,
+): Stats {
     let critical = 0;
     let notices = 0;
     let unmaintained = 0;
@@ -47,6 +81,15 @@ function getStats(vulnerabilities: Array<interfaces.Vulnerability>): Stats {
             default:
                 other += 1;
                 break;
+        }
+    }
+
+    for (const warning of warnings) {
+        if (warning.kind.unmaintained) {
+            unmaintained += 1;
+        } else {
+            // Both yanked and informational types of kind
+            other += 1;
         }
     }
 
@@ -82,9 +125,10 @@ function getSummary(stats: Stats): string {
 export async function reportCheck(
     client: github.GitHub,
     vulnerabilities: Array<interfaces.Vulnerability>,
+    warnings: Array<interfaces.Warning>,
 ): Promise<void> {
     const reporter = new checks.CheckReporter(client, 'Security audit');
-    const stats = getStats(vulnerabilities);
+    const stats = getStats(vulnerabilities, warnings);
     const summary = getSummary(stats);
 
     core.info(`Found ${summary}`);
@@ -104,7 +148,7 @@ when executed for a forked repos. \
 See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
             core.info('Posting audit report here instead.');
 
-            dumpVulnerabilities(vulnerabilities);
+            core.info(makeReport(vulnerabilities, warnings));
             if (stats.critical > 0) {
                 throw new Error(
                     'Critical vulnerabilities were found, marking check as failed',
@@ -116,12 +160,11 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     }
 
     try {
+        const body = makeReport(vulnerabilities, warnings);
         const output = {
             title: 'Security advisories found',
             summary: summary,
-            text: templates.CHECK_TEXT({
-                vulnerabilities: vulnerabilities,
-            }),
+            text: body,
         };
         const status = stats.critical > 0 ? 'failure' : 'success';
         await reporter.finishCheck(status, output);
@@ -137,35 +180,92 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     }
 }
 
+async function alreadyReported(
+    client: github.GitHub,
+    advisoryId: string,
+): Promise<boolean> {
+    const { owner, repo } = github.context.repo;
+    const results = await client.search.issuesAndPullRequests({
+        q: `${advisoryId} in:title repo:${owner}/${repo}`,
+        per_page: 1, // eslint-disable-line @typescript-eslint/camelcase
+    });
+
+    if (results.data.total_count > 0) {
+        core.info(
+            `Seems like ${advisoryId} is mentioned already in the issues/PRs, \
+will not report an issue against it`,
+        );
+        return true;
+    } else {
+        return false;
+    }
+}
+
 export async function reportIssues(
     client: github.GitHub,
     vulnerabilities: Array<interfaces.Vulnerability>,
+    warnings: Array<interfaces.Warning>,
 ): Promise<void> {
     const { owner, repo } = github.context.repo;
-    for (const vulnerability of vulnerabilities) {
-        const results = await client.search.issuesAndPullRequests({
-            q: `${vulnerability.advisory.id} in:title repo:${owner}/${repo}`,
-            per_page: 1, // eslint-disable-line @typescript-eslint/camelcase
-        });
 
-        if (results.data.total_count > 0) {
-            core.info(
-                `Seems like ${vulnerability.advisory.id} is mentioned already in the issues/PRs, \
-will not report an issue against it`,
-            );
+    for (const vulnerability of vulnerabilities) {
+        const reported = await alreadyReported(
+            client,
+            vulnerability.advisory.id,
+        );
+        if (reported) {
             continue;
         }
 
+        const body = nunjucks.renderString(templates.VULNERABILITY_ISSUE, {
+            vulnerability: vulnerability,
+        });
         const issue = await client.issues.create({
             owner: owner,
             repo: repo,
             title: `${vulnerability.advisory.id}: ${vulnerability.advisory.title}`,
-            body: templates.ISSUE_BODY({
-                vulnerability: vulnerability,
-            }),
+            body: body,
         });
         core.info(
             `Created an issue for ${vulnerability.advisory.id}: ${issue.data.html_url}`,
+        );
+    }
+
+    for (const warning of warnings) {
+        let advisory: interfaces.Advisory;
+        if ('unmaintained' in warning.kind) {
+            advisory = warning.kind.unmaintained!.advisory; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        } else if ('informational' in warning.kind) {
+            advisory = warning.kind.informational!.advisory; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        } else if ('yanked' in warning.kind) {
+            core.warning(
+                `Crate ${warning.package.name} was yanked, but no issue will be reported about it`,
+            );
+            continue;
+        } else {
+            core.warning(
+                `Unknown warning kind ${warning.kind} found, please, file a bug`,
+            );
+            continue;
+        }
+
+        const reported = await alreadyReported(client, advisory.id);
+        if (reported) {
+            continue;
+        }
+
+        const body = nunjucks.renderString(templates.WARNING_ISSUE, {
+            warning: warning,
+            advisory: advisory,
+        });
+        const issue = await client.issues.create({
+            owner: owner,
+            repo: repo,
+            title: `${advisory.id}: ${advisory.title}`,
+            body: body,
+        });
+        core.info(
+            `Created an issue for ${advisory.id}: ${issue.data.html_url}`,
         );
     }
 }
