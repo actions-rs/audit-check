@@ -80,6 +80,8 @@ For each new advisory (including informal) an issue will be created:
 
 ## Inputs
 
-| Name        | Required | Description                                                              | Type   | Default |
-| ------------| -------- | -------------------------------------------------------------------------| ------ | --------|
-| `token`     | ✓        | GitHub token, usually a `${{ secrets.GITHUB_TOKEN }}`                    | string |         |
+| Name        | Required | Description                                                                | Type   | Default |
+| ------------| -------- | ---------------------------------------------------------------------------| ------ | --------|
+| `token`     | ✓        | [GitHub token], usually a `${{ secrets.GITHUB_TOKEN }}`                    | string |         |
+
+[GitHub token]: https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token
