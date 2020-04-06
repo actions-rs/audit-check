@@ -34,26 +34,26 @@
         "url": "https://github.com/actions-rs/audit-check/issues"
     },
     "dependencies": {
-        "@actions-rs/core": "0.0.8",
-        "@actions/core": "^1.2.2",
-        "@actions/github": "^2.1.0",
-        "npm-check-updates": "^4.0.1",
-        "nunjucks": "^3.2.0"
+        "@actions-rs/core": "0.0.9",
+        "@actions/core": "^1.2.3",
+        "@actions/github": "^2.1.1",
+        "npm-check-updates": "^4.1.1",
+        "nunjucks": "^3.2.1"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^2.18.0",
-        "ts-node": "^8.6.2",
-        "@typescript-eslint/parser": "^2.18.0",
+        "@typescript-eslint/eslint-plugin": "^2.26.0",
+        "ts-node": "^8.8.2",
+        "@typescript-eslint/parser": "^2.26.0",
         "eslint": "^6.8.0",
-        "eslint-config-prettier": "^6.10.0",
+        "eslint-config-prettier": "^6.10.1",
         "eslint-plugin-prettier": "^3.1.2",
-        "@types/jest": "^25.1.1",
-        "@types/node": "^13.7.0",
-        "@zeit/ncc": "^0.21.0",
-        "jest": "^25.1.0",
-        "jest-circus": "^25.1.0",
-        "ts-jest": "^25.1.0",
-        "typescript": "^3.7.5",
-        "prettier": "^1.19.1"
+        "@types/jest": "^25.2.1",
+        "@types/node": "^13.11.0",
+        "@zeit/ncc": "^0.22.1",
+        "jest": "^25.2.7",
+        "jest-circus": "^25.2.7",
+        "ts-jest": "^25.3.1",
+        "typescript": "^3.8.3",
+        "prettier": "^2.0.3"
     }
 }
