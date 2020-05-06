@@ -153,6 +153,11 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 throw new Error(
                     'Critical vulnerabilities were found, marking check as failed',
                 );
+            } else {
+                core.info(
+                    'No critical vulnerabilities were found, not marking check as failed',
+                );
+                return;
             }
         }
 
@@ -177,6 +182,11 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         throw new Error(
             'Critical vulnerabilities were found, marking check as failed',
         );
+    } else {
+        core.info(
+            'No critical vulnerabilities were found, not marking check as failed',
+        );
+        return;
     }
 }
 

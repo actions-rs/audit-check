@@ -26,7 +26,7 @@ async function getData(): Promise<interfaces.Report> {
         await cargo.call(['audit', '--json'], {
             ignoreReturnCode: true,
             listeners: {
-                stdout: buffer => {
+                stdout: (buffer) => {
                     stdout += buffer.toString();
                 },
             },
