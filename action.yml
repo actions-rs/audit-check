@@ -6,6 +6,7 @@ branding:
   color: black
 inputs:
   token:
+    description: GitHub Actions token
     required: true
 
 runs:
