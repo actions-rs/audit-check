@@ -53,10 +53,22 @@ export async function run(actionInput: input.Input): Promise<void> {
         shouldReport = true;
     }
 
-    if (report.warnings.length === 0) {
+    // In `cargo-audit < 0.12` report contained an array of `Warning`.
+    // In `cargo-audit >= 0.12` it is a JSON object,
+    // where key is a warning type, and value is an array of `Warning` of that type.
+    let warnings: Array<interfaces.Warning> = [];
+    if (Array.isArray(report.warnings)) {
+        warnings = report.warnings;
+    } else {
+        for (const items of Object.values(report.warnings)) {
+            warnings = warnings.concat(items);
+        }
+    }
+
+    if (warnings.length === 0) {
         core.info('No warnings were found');
     } else {
-        core.warning(`${report.warnings.length} warnings found!`);
+        core.warning(`${warnings.length} warnings found!`);
         shouldReport = true;
     }
 
@@ -72,12 +84,12 @@ export async function run(actionInput: input.Input): Promise<void> {
         core.debug(
             'Action was triggered on a schedule event, creating an Issues report',
         );
-        await reporter.reportIssues(client, advisories, report.warnings);
+        await reporter.reportIssues(client, advisories, warnings);
     } else {
         core.debug(
             `Action was triggered on a ${github.context.eventName} event, creating a Check report`,
         );
-        await reporter.reportCheck(client, advisories, report.warnings);
+        await reporter.reportCheck(client, advisories, warnings);
     }
 }
 

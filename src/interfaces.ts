@@ -8,7 +8,7 @@ export interface Report {
     database: DatabaseInfo;
     lockfile: LockfileInfo;
     vulnerabilities: VulnerabilitiesInfo;
-    warnings: Warning[];
+    warnings: Warning[] | { [key: string]: Warning[] };
 }
 
 export interface DatabaseInfo {
@@ -47,23 +47,7 @@ export interface Package {
 }
 
 export interface Warning {
-    kind: Kind;
+    kind: 'unmaintained' | 'informational' | 'yanked' | string;
+    advisory: Advisory;
     package: Package;
 }
-
-// TypeScript types system is weird :(
-export interface Kind {
-    unmaintained?: KindUnmaintained;
-    informational?: KindInformational;
-    yanked?: KindYanked;
-}
-
-export interface KindUnmaintained {
-    advisory: Advisory;
-}
-
-export interface KindInformational {
-    advisory: Advisory;
-}
-
-export interface KindYanked {} // eslint-disable-line @typescript-eslint/no-empty-interface

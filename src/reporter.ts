@@ -26,26 +26,32 @@ function makeReport(
 ): string {
     const preparedWarnings: Array<templates.ReportWarning> = [];
     for (const warning of warnings) {
-        // TODO: Is there any better way?
-        if ('unmaintained' in warning.kind) {
-            preparedWarnings.push({
-                advisory: warning.kind.unmaintained!.advisory, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                package: warning.package,
-            });
-        } else if ('informational' in warning.kind) {
-            preparedWarnings.push({
-                advisory: warning.kind.informational!.advisory, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                package: warning.package,
-            });
-        } else if ('yanked' in warning.kind) {
-            preparedWarnings.push({
-                package: warning.package,
-            });
-        } else {
-            core.warning(
-                `Unknown warning kind ${warning.kind} found, please, file a bug`,
-            );
-            continue;
+        switch (warning.kind) {
+            case 'unmaintained':
+                preparedWarnings.push({
+                    advisory: warning.advisory,
+                    package: warning.package,
+                });
+                break;
+
+            case 'informational':
+                preparedWarnings.push({
+                    advisory: warning.advisory,
+                    package: warning.package,
+                });
+                break;
+
+            case 'yanked':
+                preparedWarnings.push({
+                    package: warning.package,
+                });
+                break;
+
+            default:
+                core.warning(
+                    `Unknown warning kind ${warning.kind} found, please, file a bug`,
+                );
+                break;
         }
     }
 
@@ -85,11 +91,15 @@ function getStats(
     }
 
     for (const warning of warnings) {
-        if (warning.kind.unmaintained) {
-            unmaintained += 1;
-        } else {
-            // Both yanked and informational types of kind
-            other += 1;
+        switch (warning.kind) {
+            case 'unmaintained':
+                unmaintained += 1;
+                break;
+
+            default:
+                // Both yanked and informational types of kind
+                other += 1;
+                break;
         }
     }
 
@@ -243,20 +253,21 @@ export async function reportIssues(
 
     for (const warning of warnings) {
         let advisory: interfaces.Advisory;
-        if ('unmaintained' in warning.kind) {
-            advisory = warning.kind.unmaintained!.advisory; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        } else if ('informational' in warning.kind) {
-            advisory = warning.kind.informational!.advisory; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        } else if ('yanked' in warning.kind) {
-            core.warning(
-                `Crate ${warning.package.name} was yanked, but no issue will be reported about it`,
-            );
-            continue;
-        } else {
-            core.warning(
-                `Unknown warning kind ${warning.kind} found, please, file a bug`,
-            );
-            continue;
+        switch (warning.kind) {
+            case 'unmaintained':
+            case 'informational':
+                advisory = warning.advisory;
+                break;
+            case 'yanked':
+                core.warning(
+                    `Crate ${warning.package.name} was yanked, but no issue will be reported about it`,
+                );
+                continue;
+            default:
+                core.warning(
+                    `Unknown warning kind ${warning.kind} found, please, file a bug`,
+                );
+                continue;
         }
 
         const reported = await alreadyReported(client, advisory.id);
