@@ -61,7 +61,7 @@ and execute this Action periodically against the `HEAD` of repository default br
 name: Security audit
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 0 * *'
 jobs:
   audit:
     runs-on: ubuntu-latest
