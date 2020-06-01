@@ -36,7 +36,7 @@
     "dependencies": {
         "@actions-rs/core": "0.0.9",
         "@actions/core": "^1.2.4",
-        "@actions/github": "^2.1.1",
+        "@actions/github": "^2.2.0",
         "npm-check-updates": "^4.1.2",
         "nunjucks": "^3.2.1"
     },
