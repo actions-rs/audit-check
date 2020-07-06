@@ -4,7 +4,7 @@
 
 import { input } from '@actions-rs/core';
 
-import stringArgv from "string-argv";
+import stringArgv from 'string-argv';
 
 // Parsed action input
 export interface Input {

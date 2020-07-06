@@ -23,8 +23,8 @@ async function getData(args: string[]): Promise<interfaces.Report> {
     let stdout = '';
     try {
         core.startGroup('Calling cargo-audit (JSON output)');
-        let full_args = ['audit', '--json'].concat(args);
-        await cargo.call(full_args, {
+        const fullArgs = ['audit', '--json'].concat(args);
+        await cargo.call(fullArgs, {
             ignoreReturnCode: true,
             listeners: {
                 stdout: (buffer) => {
