@@ -14,7 +14,7 @@ const pkg = require('../package.json'); // eslint-disable-line @typescript-eslin
 
 const USER_AGENT = `${pkg.name}/${pkg.version} (${pkg.bugs.url})`;
 
-async function getData(): Promise<interfaces.Report> {
+async function getData(args: string[]): Promise<interfaces.Report> {
     const cargo = await Cargo.get();
     await cargo.findOrInstall('cargo-audit');
 
@@ -23,7 +23,8 @@ async function getData(): Promise<interfaces.Report> {
     let stdout = '';
     try {
         core.startGroup('Calling cargo-audit (JSON output)');
-        await cargo.call(['audit', '--json'], {
+        const fullArgs = ['audit', '--json'].concat(args);
+        await cargo.call(fullArgs, {
             ignoreReturnCode: true,
             listeners: {
                 stdout: (buffer) => {
@@ -44,7 +45,7 @@ async function getData(): Promise<interfaces.Report> {
 }
 
 export async function run(actionInput: input.Input): Promise<void> {
-    const report = await getData();
+    const report = await getData(actionInput.args);
     let shouldReport = false;
     if (!report.vulnerabilities.found) {
         core.info('No vulnerabilities were found');
