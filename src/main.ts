@@ -1,5 +1,6 @@
 import * as process from 'process';
 import * as os from 'os';
+import * as fs from 'fs';
 
 import * as core from '@actions/core';
 import * as github from '@actions/github';
@@ -18,7 +19,9 @@ async function getData(): Promise<interfaces.Report> {
     const cargo = await Cargo.get();
     await cargo.findOrInstall('cargo-audit');
 
-    await cargo.call(['generate-lockfile']);
+    if (!fs.existsSync('Cargo.lock')) {
+        await cargo.call(['generate-lockfile']);
+    }
 
     let stdout = '';
     try {
