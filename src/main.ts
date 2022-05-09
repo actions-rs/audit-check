@@ -14,13 +14,13 @@ const pkg = require('../package.json'); // eslint-disable-line @typescript-eslin
 
 const USER_AGENT = `${pkg.name}/${pkg.version} (${pkg.bugs.url})`;
 
-async function getData(ignore: string[] | undefined): Promise<interfaces.Report> {
+async function getData(
+    ignore: string[] | undefined,
+): Promise<interfaces.Report> {
     const cargo = await Cargo.get();
     await cargo.findOrInstall('cargo-audit');
 
     await cargo.call(['generate-lockfile']);
-
-
 
     let stdout = '';
     try {
