@@ -13,6 +13,6 @@ export interface Input {
 export function get(): Input {
     return {
         token: input.getInput('token', { required: true }),
-        ignore: input.getInputList('ignore', { required: false }),
+        ignore: input.getInput('ignore', { required: false }).split(/, */g),
     };
 }
