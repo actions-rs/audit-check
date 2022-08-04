@@ -8,6 +8,9 @@ inputs:
   token:
     description: GitHub Actions token
     required: true
+  ignore:
+    description: Comma-separated list of advisory ids to ignore
+    required: false
 
 runs:
   using: 'node12'
