@@ -23,7 +23,7 @@ async function getData(): Promise<interfaces.Report> {
     let stdout = '';
     try {
         core.startGroup('Calling cargo-audit (JSON output)');
-        await cargo.call(['audit', '--json'], {
+        await cargo.call(['audit', '-f','./actix-api', '--json'], {
             ignoreReturnCode: true,
             listeners: {
                 stdout: (buffer) => {
